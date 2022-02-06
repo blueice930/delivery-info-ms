@@ -1,0 +1,44 @@
+.App {
+  text-align: center;
+  background-image: url('./bg.jpg');
+  height: 100vh;
+  width: 100%;
+  background-size: cover;
+}
+
+.App .header {
+  font-size: 30px;
+  font-weight: bold;
+  padding-top: 10%;
+}
+
+.App .input-label {
+  padding: 20px;
+  font-weight: bold;
+  color: #454545;
+}
+
+.data-display {
+  margin-top: 20px;
+  margin-left: 15%;
+  margin-right: 15%;
+  background-color: #00000099;
+  border-radius: 16px;
+  padding: 16px;
+  font-size: 18px;
+  color: #fff;
+}
+
+.data-cell {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px;
+}
+
+.data-display .label {
+  font-weight: bold;
+}
+
+.name, .phone, .product, .product, .deliveryCompany, .deliveryId, .channel, .channelContactl {
+  font-weight: normal;
+}
