@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from 'react';
-import {
-  ref, onValue, DataSnapshot, query, equalTo, orderByChild, push,
-} from 'firebase/database';
+// import {
+//   ref, onValue, DataSnapshot, query, equalTo, orderByChild, push,
+// } from 'firebase/database';
+import { isEmpty } from 'lodash';
 
 import './App.css';
 import { db } from './firebase';
@@ -21,17 +22,21 @@ function App() {
       handleErr('您尚未输入信息');
       return;
     }
-    const dataRef = ref(db, '/data');
     setisLoading(true);
-    onValue(query(dataRef, orderByChild('phone'), equalTo(phoneParam)), (snapshot: DataSnapshot) => {
-      setisLoading(false);
-      setdata(snapshot.val());
-      if (!snapshot.val()) {
-        handleErr('无法找到该手机号对应的信息，请核对输入信息，如有疑问请联系购买渠道客服。');
-      }
-    }, {
-      onlyOnce: true,
-    });
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phoneParam }),
+    };
+    const url = window.location.hostname === 'localhost' ? 'http://localhost:8080/query' : 'https://db-query-backend-3tb7lob5jq-df.a.run.app/query';
+    const response = await fetch(url, requestOptions);
+    const result = await response.json();
+    if (isEmpty(result)) {
+      handleErr('无法找到该手机号对应的信息，请核对输入信息，如有疑问请联系购买渠道客服。');
+    } else {
+      setdata(result);
+    }
+    setisLoading(false);
   }, [phoneParam]);
 
   return (

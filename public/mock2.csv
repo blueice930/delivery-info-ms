@@ -1,4 +1,4 @@
-name.string(),phone.string(),product.string(),productCount.int32(),deliveryCompany.string(),deliveryId.string(),channel.string(),channelContact.string()
+name,phone,product,productCount,deliveryCompany,deliveryId,channel,channelContact
 小徐,13668919275,万物第1期,2,中通,73175811696294,包头新生代,13848255168（请加微信）
 赵琳,15947186333,万物第1期,1,中通,73175807424130,包头新生代,13848255168（请加微信）
 乔女士,15348873090,万物第1期,1,中通,73175807424234,包头新生代,13848255168（请加微信）

@@ -1,18 +1,19 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import React, {
-  useState, CSSProperties, useEffect, useCallback,
+  useState, CSSProperties, useEffect, useCallback, useRef,
 } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+// import { signInWithEmailAndPassword } from 'firebase/auth';
 import { parse } from 'papaparse';
-import { push, ref } from 'firebase/database';
+// import { push, ref } from 'firebase/database';
 
 import './Admin.css';
 import { auth, db } from './firebase';
 
 function Admin() {
   const [email, setEmail] = useState('');
+  const [sessionId, setSessionId] = useState('');
   const [file, setfile] = useState(null);
-  const [data, setData] = useState([]);
+  const [entries, setEntries] = useState([]);
   const [errMsg, seterrMsg] = useState('');
   const [isLoggedIn, setisLoggedIn] = useState(false);
 
@@ -20,42 +21,74 @@ function Admin() {
   const [pw, setpw] = useState('');
   const [isLoading, setisLoading] = useState(false);
 
+  const fileRef = useRef<HTMLInputElement>(null);
+
   const login = async () => {
     if (!(email && pw)) {
       seterrMsg('请输入邮箱和密码');
       return;
     }
-    let res;
-    try {
-      res = await signInWithEmailAndPassword(auth, email, pw);
-    } catch (e: any) {
-      seterrMsg('登录失败!');
-    }
-    if (res?.user?.uid) {
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pw }),
+    };
+    const url = window.location.hostname === 'localhost' ? 'http://localhost:8080/auth' : 'https://db-query-backend-3tb7lob5jq-df.a.run.app/auth';
+    const response = await fetch(url, requestOptions);
+    const { success, data } = await response.json();
+
+    if (success) {
       setsuccessMsg('登录成功!');
       setisLoggedIn(true);
+      setSessionId(data?.sessionId);
+    } else {
+      seterrMsg('登录失败!');
     }
   };
 
   const upload = useCallback(async () => {
-    if (!data || !data.length) {
+    if (!entries || !entries.length) {
       seterrMsg('未检测到有效数据');
       return;
     }
-    const dataRef = ref(db, '/data');
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, sessionId, entries }),
+    };
+    const url = window.location.hostname === 'localhost' ? 'http://localhost:8080/insert' : 'https://db-query-backend-3tb7lob5jq-df.a.run.app/insert';
+
     try {
-      // eslint-disable-next-line no-restricted-syntax
-      for (const d of data) {
-        push(dataRef, d);
-        console.log('d', d);
+      const response = await fetch(url, requestOptions);
+      const { success, data } = await response.json();
+      if (success) {
+        setsuccessMsg('上传成功!');
+        console.log('data', data);
+      } else {
+        seterrMsg(`上传失败! 错误: ${data}`);
       }
     } catch (e) {
       seterrMsg('上传失败! 请检查文件');
       console.error('e', e);
     }
-    setData([]);
+
+    // realtime db abandoned in this project.
+    // const dataRef = ref(db, '/data');
+    // try {
+    //   // eslint-disable-next-line no-restricted-syntax
+    //   for (const d of data) {
+    //     push(dataRef, d);
+    //     console.log('d', d);
+    //   }
+    // } catch (e) {
+    //   seterrMsg('上传失败! 请检查文件');
+    //   console.error('e', e);
+    // }
+
+    setEntries([]);
     setfile(null);
-  }, [data]);
+    fileRef.current!.value = '';
+  }, [entries]);
 
   const handleKeyPress = (event: any) => {
     if (event.key === 'Enter') {
@@ -68,7 +101,7 @@ function Admin() {
       parse(file, {
         complete(results: any) {
           if (results?.data) {
-            setData(results?.data);
+            setEntries(results?.data);
             return;
           }
           if (results?.errors?.length) {
@@ -83,7 +116,6 @@ function Admin() {
 
   return (
     <div className="admin-container">
-      <div className="title">管理员上传界面</div>
       {errMsg && (
       <div className="error-message alert alert-danger alert-dismissible fade show" role="alert">
         {errMsg}
@@ -96,6 +128,7 @@ function Admin() {
         <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" />
       </div>
       )}
+      <div className="title">管理员上传界面</div>
       {!isLoggedIn && (
         <div className="login-section">
           <div className="mb-3 row">
@@ -118,7 +151,7 @@ function Admin() {
           <div className="mb-3 row">
             <label htmlFor="upload" className="col-sm-4 col-form-label">上传文件</label>
             <div className="col-sm-8">
-              <input accept=".csv" type="file" id="upload" className="form-control" onChange={(e: any) => setfile(e.target.files[0])} />
+              <input ref={fileRef} accept=".csv" type="file" id="upload" className="form-control" onChange={(e: any) => setfile(e.target.files[0])} />
             </div>
           </div>
           <button disabled={isLoading} type="submit" className="btn-primary btn" onClick={upload}>上传</button>

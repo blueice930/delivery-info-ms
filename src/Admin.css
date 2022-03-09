@@ -1,12 +1,11 @@
 .admin-container {
-  padding-top: 80px;
   display: flex;
   align-items: center;
   flex-direction: column;
 }
 .title {
   font-size: 30px;
-  margin: 40px 0;
+  margin-top: 5%;
 }
 
 .login-section {
